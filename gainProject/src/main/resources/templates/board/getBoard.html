@@ -1,0 +1,160 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Spring Framework</title>
+	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">	
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.4.1/css/all.css" 
+		integrity="sha384-5sAR7xN1Nv6T6+dT2mhtzEpVJvfS3NScPQTrOxhwjIuvcA67KV2R5Jz6kr4abQsz" 
+		crossorigin="anonymous">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>	
+
+</head>
+<body>
+	<div class="container"  align="center">
+		<div class="mt-4 p-5" style="background-color: #141414; color: #ffffff;">
+    	<h1 style="position: absolute;">DASHBOARD</h1>
+
+    <!-- <a th:href="@{/logout}"  class="col-1 btn btn-primary me-2">로그아웃</a> -->
+		</div>
+	</div>		
+	
+	<div class="container mt-3" align="center">
+		<form th:action="@{/updateBoard}" method="post">
+			<input name="seq" type="hidden" th:value="${board.seq}">		
+			<div class="input-group mb-3">
+			    <span class="input-group-text" id="desc_title"><i class="fas fa-address-book">제목</i></span>
+			    <input type="text" class="form-control" name="title" th:value="${board.title}" th:readonly="${session['member'].name != board.writer}">
+			</div>
+			<div class="input-group mb-3">
+  				<span class="input-group-text" id="desc_title"><i class="fas fa-hashtag">조회수</i></span>
+  				<input type="text" class="form-control" name="cnt" th:value="${ board.cnt }" disabled>
+			</div>
+			<div class="input-group mb-3">
+  				<span class="input-group-text" id="desc_title"><i class="fas fa-calendar">작성일</i></span>
+  				<input type="date" class="form-control" name="createdate" th:value="${#dates.format(board.createDate, 'yyyy-MM-dd')}" th:readonly="${session['member'].name != board.writer}">
+			</div>
+			<div class="input-group mb-3">
+  				<span class="input-group-text" id="desc_title"><i class="fas fa-user">작성자</i></span>
+  				<input type="text" class="form-control" name="writer" th:value="${ board.writer }" disabled>
+			</div>
+			<div class="input-group mb-3">
+			  <span class="input-group-text"><i class="fas fa-clipboard">본문</i></span>
+			  <textarea class="form-control" th:text="${board.content}"  name="content" rows="15" th:readonly="${session['member'].name != board.writer}" ></textarea>
+			</div>	
+			
+			<div class="input-group mb-3" th:if="${not #strings.isEmpty(board.fileName)}">
+  				<span class="input-group-text" id="desc_title"><i class="fas fa-image"></i> 첨부파일 미리보기</span>
+ 				 <img th:src="@{/download(seq=${board.seq}, fn=${board.fileName})}" class="img-thumbnail" alt="Preview Image">
+			</div>
+			<div class="input-group mb-3" th:unless="${not #strings.isEmpty(board.fileName)}">
+  				<span class="input-group-text" id="desc_title"><i class="fas fa-image"></i></span>
+  				<span class="text-muted">첨부파일 없음</span>
+			</div>
+			<div class="input-group mb-3" th:if="${not #strings.isEmpty(board.fileName)}">
+  				<a th:href="@{/download(seq=${board.seq}, fn=${board.fileName})}">
+   				 <i class="fas fa-file-download" th:text="${board.fileName}"></i>
+				  </a>
+			</div>
+			<div class="input-group mb-3" th:unless="${not #strings.isEmpty(board.fileName)}">
+ 				 <span class="text-muted"></span>
+			</div>
+
+			<div class="container" style="display: flex; justify-content: flex-end;">
+			    <input th:if="${session['member'].name == board.writer}" type="submit" class="btn btn-primary mt-3 me-2" value="게시글수정" />
+			    <a th:if="${session['member'].name == board.writer}" th:href="@{/deleteBoard(seq=${board.seq})}" class="btn btn-primary mt-3 me-2">게시글삭제</a>
+			    <a th:href="@{getBoardList}" class="btn btn-primary mt-3">게시글목록</a>			
+			</div>
+		</form>
+
+		<hr>
+		
+		<div class="container mt-3" align="center"> 
+			<ul>
+			<ul>
+  <li th:each="reply : ${reply}" style="list-style-type: none;">
+    <div style="display: flex; align-items: flex-start;">
+      <div>
+        <span style="display: block; text-align: left;" th:text="${reply.writer} + ' / ' + ${#dates.format(reply.regDate, 'yyyy-MM-dd HH:mm:ss')}"></span>
+        <br />
+        <span style="display: block; text-align: left;" th:text="${reply.content}"></span>
+      </div>
+      <div style="margin-left: auto;">
+        <p>
+          <a th:if="${session['member'].name == reply.writer}" class="btn btn-primary mt-3" th:href="@{/modifyReply(seq=${board.seq},rno=${reply.rno})}">
+            <i class="fas fa-edit"></i> <!-- 댓글 수정 아이콘 -->
+          </a>
+          <a th:if="${session['member'].name == reply.writer}" class="btn btn-primary mt-3" th:href="@{/deleteReply(seq=${board.seq},rno=${reply.rno})}">
+            <i class="fas fa-trash-alt"></i> <!-- 댓글 삭제 아이콘 -->
+          </a>
+        </p>
+      </div>
+    </div>
+    <hr />
+  </li>
+</ul>
+
+			    <form method="post" action="/writeReply">
+				    <p>
+				        <span class="input-group-text" id="desc_title"><i class="fas fa-user"><label for="writer">댓글 작성자</label></i></span>
+				        <input class="form-control" type="text" id="writer" name="writer" th:value="${session['member'].name}" readonly="readonly">
+				    </p>
+				    <p>
+				        <textarea class="form-control" rows="5" cols="50" name="content"></textarea>
+				    </p>
+				    <p>
+				        <input class="form-control" type="hidden" name="seq" th:value="${board.seq}">
+				        <button class="btn btn-primary mt-3" type="submit">댓글 작성</button>
+				    </p>
+				</form>
+			</ul>		
+		</div>
+	</div>
+	      <footer class="footer">
+         <div class="container">
+           <div class="row">
+            <!-- <div class="col-md-4">
+              <h3>About Apple</h3>
+              <ul>
+               <li><a href="#">About Apple</a></li>
+               <li><a href="#">Newsroom</a></li>
+               <li><a href="#">Apple Leadership</a></li>
+               <li><a href="#">Job Opportunities</a></li>
+               <li><a href="#">Investors</a></li>
+              </ul>
+            </div> -->
+            <!-- <div class="col-md-4">
+              <h3>Customer Service</h3>
+              <ul>
+               <li><a href="#">Support</a></li>
+               <li><a href="#">Apple Store</a></li>
+               <li><a href="#">For Education</a></li>
+               <li><a href="#">For Business</a></li>
+               <li><a href="#">Apple Values</a></li>
+              </ul>
+            </div> -->
+            <!-- <div class="col-md-4">
+              <h3>Follow Apple</h3>
+              <ul>
+               <li><a href="#">Facebook</a></li>
+               <li><a href="#">Twitter</a></li>
+               <li><a href="#">YouTube</a></li>
+               <li><a href="#">Instagram</a></li>
+              </ul>
+            </div> -->
+           </div>
+           <div class="row">
+            <div class="col-md-12">
+               <br />
+         <br />
+         <br />
+              <p class="text-center">&copy;Copyright © 2023 DASH Inc. 모든 권리 보유.</p>
+            </div>
+           </div>
+         </div>
+        </footer>
+</body>
+
+</html>
